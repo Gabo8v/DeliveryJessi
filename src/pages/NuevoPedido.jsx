@@ -113,7 +113,7 @@ export default function NuevoPedido() {
       return { ...prev, [plateId]: nextQty }
     })
     if (nextQty) {
-      const plate = plates.find(p => p.id === plateId)
+      const plate = plates.find(p => p.id === Number(plateId))
       const match = plate?.offers?.find(o => o.qty === nextQty)
       if (match) {
         setActiveOffers(prev => ({ ...prev, [plateId]: match }))
