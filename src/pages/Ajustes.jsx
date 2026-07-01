@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
 
+const APP_VERSION = 'v1.1.0'
+const REPO = 'Gabo8v/DeliveryJessi'
+
 function todayStr() {
   const d = new Date()
   return d.getFullYear() + '-' +
@@ -25,6 +28,9 @@ export default function Ajustes() {
   const [editName, setEditName] = useState('')
   const [editPrice, setEditPrice] = useState(4000)
   const [editOffers, setEditOffers] = useState([])
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [updateData, setUpdateData] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -143,6 +149,36 @@ export default function Ajustes() {
     showToast('✅ Info guardada')
   }
 
+  async function checkForUpdates() {
+    setCheckingUpdate(true)
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+      if (!res.ok) throw new Error('No se pudo conectar')
+      const data = await res.json()
+      if (data.tag_name !== APP_VERSION) {
+        const asset = data.assets?.find(a => a.name.endsWith('.apk'))
+        if (asset) {
+          setUpdateData({ version: data.tag_name, url: asset.browser_download_url, body: data.body })
+          setShowUpdateModal(true)
+        } else {
+          showToast('⚠️ Release sin APK')
+        }
+      } else {
+        showToast('✅ Ya tenés la última versión')
+      }
+    } catch (err) {
+      showToast('⚠️ ' + (err.message || 'Error de conexión'))
+    } finally {
+      setCheckingUpdate(false)
+    }
+  }
+
+  function downloadUpdate() {
+    if (!updateData) return
+    window.open(updateData.url, '_blank')
+    setShowUpdateModal(false)
+  }
+
   return (
     <div className="page">
       <h2 className="title-lg" style={{ marginBottom: 16 }}>Ajustes</h2>
@@ -242,6 +278,60 @@ export default function Ajustes() {
           Guardar
         </button>
       </div>
+
+      <div className="setting-section">
+        <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Actualizaciones</span>
+          <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>{APP_VERSION}</span>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>
+          Las nuevas versiones se publican en GitHub. Buscá actualizaciones para descargar el último APK.
+        </p>
+        <button className="btn btn-outline btn-sm" onClick={checkForUpdates} disabled={checkingUpdate} style={{ width: 'auto' }}>
+          {checkingUpdate ? 'Buscando...' : '🔍 Buscar actualización'}
+        </button>
+      </div>
+
+      {/* Update modal */}
+      {showUpdateModal && updateData && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 500,
+            background: 'rgba(61, 44, 46, 0.5)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowUpdateModal(false) }}
+        >
+          <div style={{
+            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
+            width: '100%', padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
+          }}>
+            <div style={{
+              width: 36, height: 4, background: 'var(--border)',
+              borderRadius: 4, margin: '0 auto 16px',
+            }} />
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>📥 Nueva versión disponible</h3>
+            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 4 }}>
+              {updateData.version} → Instalá el nuevo APK para actualizar.
+            </p>
+            {updateData.body && (
+              <div style={{
+                fontSize: 13, color: 'var(--text)', marginBottom: 16,
+                padding: 10, background: 'var(--bg)', borderRadius: 10,
+                whiteSpace: 'pre-line', maxHeight: 120, overflowY: 'auto'
+              }}>
+                {updateData.body}
+              </div>
+            )}
+            <button className="btn btn-primary" onClick={downloadUpdate}>
+              Descargar APK
+            </button>
+            <button className="btn btn-outline" onClick={() => setShowUpdateModal(false)} style={{ marginTop: 8 }}>
+              Ahora no
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add plate modal */}
       {showAddPlate && (
