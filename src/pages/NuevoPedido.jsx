@@ -36,6 +36,7 @@ export default function NuevoPedido() {
   const [clients, setClients] = useState([])
   const [takenBy, setTakenBy] = useState('')
   const [clientFocused, setClientFocused] = useState(false)
+  const [sopaAddons, setSopaAddons] = useState({})
   const deliveryFee = prices.delivery
 
   useEffect(() => {
@@ -82,6 +83,15 @@ export default function NuevoPedido() {
       delete copy[plateId]
       return copy
     })
+    setSopaAddons(prev => {
+      const copy = { ...prev }
+      delete copy[plateId]
+      return copy
+    })
+  }
+
+  function toggleSopa(plateId) {
+    setSopaAddons(prev => ({ ...prev, [plateId]: !prev[plateId] }))
   }
 
   function applyOffer(plateId, offer) {
@@ -90,11 +100,7 @@ export default function NuevoPedido() {
   }
 
   function adjustQty(plateId, delta) {
-    setActiveOffers(prev => {
-      const copy = { ...prev }
-      delete copy[plateId]
-      return copy
-    })
+    let nextQty
     setQuantities(prev => {
       const current = prev[plateId] || 0
       const next = current + delta
@@ -103,8 +109,28 @@ export default function NuevoPedido() {
         delete copy[plateId]
         return copy
       }
-      return { ...prev, [plateId]: Math.min(next, 99) }
+      nextQty = Math.min(next, 99)
+      return { ...prev, [plateId]: nextQty }
     })
+    if (nextQty) {
+      const plate = plates.find(p => p.id === plateId)
+      const match = plate?.offers?.find(o => o.qty === nextQty)
+      if (match) {
+        setActiveOffers(prev => ({ ...prev, [plateId]: match }))
+      } else {
+        setActiveOffers(prev => {
+          const copy = { ...prev }
+          delete copy[plateId]
+          return copy
+        })
+      }
+    } else {
+      setActiveOffers(prev => {
+        const copy = { ...prev }
+        delete copy[plateId]
+        return copy
+      })
+    }
   }
 
   function handleClientSearch(val) {
@@ -166,22 +192,23 @@ export default function NuevoPedido() {
         const plate = plates.find(p => p.id === Number(plateId))
         if (!plate) return null
         const offer = activeOffers[plateId]
+        const hasSopa = sopaAddons[plateId] && plate.sopaPrice
         if (offer) {
           return {
             plateId: plate.id,
-            plateName: plate.name,
+            plateName: plate.name + (hasSopa ? ' + sopa' : ''),
             qty: offer.qty,
-            unitPrice: Math.round(offer.totalPrice / offer.qty),
-            subtotal: offer.totalPrice,
+            unitPrice: Math.round(offer.totalPrice / offer.qty) + (hasSopa ? plate.sopaPrice : 0),
+            subtotal: offer.totalPrice + (hasSopa ? plate.sopaPrice * offer.qty : 0),
             offerLabel: offer.label
           }
         }
         return {
           plateId: plate.id,
-          plateName: plate.name,
+          plateName: plate.name + (hasSopa ? ' + sopa' : ''),
           qty,
-          unitPrice: plate.price,
-          subtotal: plate.price * qty
+          unitPrice: plate.price + (hasSopa ? plate.sopaPrice : 0),
+          subtotal: (plate.price + (hasSopa ? plate.sopaPrice : 0)) * qty
         }
       })
       .filter(Boolean)
@@ -325,6 +352,18 @@ export default function NuevoPedido() {
                         </button>
                       )}
                     </div>
+                    {isSelected && p.sopaPrice > 0 && (
+                      <label style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        fontSize: 13, cursor: 'pointer', padding: '2px 0'
+                      }}>
+                        <input type="checkbox"
+                          checked={!!sopaAddons[p.id]}
+                          onChange={() => toggleSopa(p.id)}
+                          style={{ width: 18, height: 18 }} />
+                        Agregar sopa (+${p.sopaPrice.toLocaleString()} c/u)
+                      </label>
+                    )}
                     {p.offers && p.offers.length > 0 && !isSelected && (
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {p.offers.map((offer, idx) => (
@@ -492,8 +531,7 @@ export default function NuevoPedido() {
           <div className="chip-group">
             {[
               { value: 'efectivo', label: '💵 Efectivo' },
-              { value: 'transferencia', label: '💳 Transferencia' },
-              { value: 'mp', label: '📱 MP' },
+              { value: 'transferencia', label: '💳 Transferencia / MP' },
               { value: 'fiado', label: '📋 Fiado' },
             ].map(opt => (
               <button

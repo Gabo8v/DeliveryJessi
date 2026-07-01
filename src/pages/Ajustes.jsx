@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
 
-const APP_VERSION = 'v1.1.0'
+const APP_VERSION = 'v1.2.0'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {
@@ -23,10 +23,12 @@ export default function Ajustes() {
   const [showAddPlate, setShowAddPlate] = useState(false)
   const [newPlateName, setNewPlateName] = useState('')
   const [newPlatePrice, setNewPlatePrice] = useState(4000)
+  const [newPlateSopa, setNewPlateSopa] = useState(0)
   const [menuSearch, setMenuSearch] = useState('')
   const [editPlate, setEditPlate] = useState(null)
   const [editName, setEditName] = useState('')
   const [editPrice, setEditPrice] = useState(4000)
+  const [editSopaPrice, setEditSopaPrice] = useState(0)
   const [editOffers, setEditOffers] = useState([])
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
@@ -69,6 +71,7 @@ export default function Ajustes() {
     setEditPlate(p)
     setEditName(p.name)
     setEditPrice(p.price)
+    setEditSopaPrice(p.sopaPrice || 0)
     setEditOffers((p.offers || []).map(o => ({ ...o })))
   }
 
@@ -77,6 +80,7 @@ export default function Ajustes() {
     await db.plates.update(editPlate.id, {
       name: editName.trim(),
       price: editPrice || 4000,
+      sopaPrice: editSopaPrice || 0,
       offers: editOffers
     })
     setEditPlate(null)
@@ -111,12 +115,14 @@ export default function Ajustes() {
     await db.plates.add({
       name: newPlateName.trim(),
       price: newPlatePrice || 4000,
+      sopaPrice: newPlateSopa || 0,
       active: 1,
       offers: []
     })
     setShowAddPlate(false)
     setNewPlateName('')
     setNewPlatePrice(4000)
+    setNewPlateSopa(0)
     await loadData()
     showToast('✅ Plato agregado')
   }
@@ -193,7 +199,7 @@ export default function Ajustes() {
             <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => openEditPlate(p)}>
               <span style={{ fontWeight: 500 }}>{p.name}</span>
               <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12, display: 'block' }}>
-                ${p.price.toLocaleString()}{p.offers?.length > 0 ? ` · ${p.offers.length} oferta${p.offers.length > 1 ? 's' : ''}` : ''}
+                ${p.price.toLocaleString()}{p.sopaPrice ? ` + sopa $${p.sopaPrice.toLocaleString()}` : ''}{p.offers?.length > 0 ? ` · ${p.offers.length} oferta${p.offers.length > 1 ? 's' : ''}` : ''}
               </small>
             </div>
             <button onClick={() => togglePlateActive(p.id)} style={{
@@ -361,6 +367,11 @@ export default function Ajustes() {
               <input className="input-field" type="number" value={newPlatePrice}
                 onChange={e => setNewPlatePrice(parseFloat(e.target.value) || 0)} />
             </div>
+            <div className="input-group">
+              <label className="input-label">Agregar sopa (+$)</label>
+              <input className="input-field" type="number" value={newPlateSopa}
+                onChange={e => setNewPlateSopa(parseFloat(e.target.value) || 0)} />
+            </div>
             <button className="btn btn-primary" onClick={addPlate}>Agregar plato</button>
             <button className="btn btn-outline" onClick={() => setShowAddPlate(false)} style={{ marginTop: 8 }}>Cancelar</button>
           </div>
@@ -396,6 +407,11 @@ export default function Ajustes() {
               <label className="input-label">Precio ($)</label>
               <input className="input-field" type="number" value={editPrice}
                 onChange={e => setEditPrice(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Agregar sopa (+$)</label>
+              <input className="input-field" type="number" value={editSopaPrice}
+                onChange={e => setEditSopaPrice(parseFloat(e.target.value) || 0)} />
             </div>
 
             <div className="input-group">

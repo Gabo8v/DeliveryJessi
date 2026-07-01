@@ -47,14 +47,13 @@ const defaultPlates = [
   { name: 'Milanesas de carne o pollo', price: 4000 },
   { name: 'Lechón', price: 4000 },
   { name: 'Guiso de lentejas', price: 4000 },
-  { name: 'Bandeja sola', price: 4000 },
-  { name: 'Menú sopa+bandeja', price: 5000 },
+  { name: 'Bandeja', price: 4000, sopaPrice: 1000 },
 ]
 
 async function seedData() {
   const count = await db.plates.count()
   if (count > 0) return
-  await db.plates.bulkAdd(defaultPlates.map(p => ({ name: p.name, price: p.price, active: 1, offers: p.offers || [] })))
+  await db.plates.bulkAdd(defaultPlates.map(p => ({ name: p.name, price: p.price, active: 1, offers: p.offers || [], sopaPrice: p.sopaPrice || 0 })))
 }
 
 function App() {

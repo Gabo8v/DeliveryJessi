@@ -105,7 +105,7 @@ export default function PedidosDia() {
     loadOrders()
   }
 
-  const payIcons = { efectivo: '💵', transferencia: '💳', mp: '📱', fiado: '📋' }
+  const payIcons = { efectivo: '💵', transferencia: '💳', fiado: '📋' }
 
   return (
     <div className="page">
