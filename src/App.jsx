@@ -56,8 +56,21 @@ async function seedData() {
   await db.plates.bulkAdd(defaultPlates.map(p => ({ name: p.name, price: p.price, active: 1, offers: p.offers || [], sopaPrice: p.sopaPrice || 0 })))
 }
 
+async function migratePlates() {
+  const plates = await db.plates.toArray()
+  for (const plate of plates) {
+    if (plate.name === 'Bandeja sola') {
+      await db.plates.update(plate.id, { name: 'Bandeja', sopaPrice: 1000 })
+    } else if (plate.name === 'Menú sopa+bandeja') {
+      await db.plates.delete(plate.id)
+    } else if (plate.sopaPrice === undefined) {
+      await db.plates.update(plate.id, { sopaPrice: 0 })
+    }
+  }
+}
+
 function App() {
-  useEffect(() => { seedData() }, [])
+  useEffect(() => { seedData().then(migratePlates) }, [])
 
   return (
     <>
