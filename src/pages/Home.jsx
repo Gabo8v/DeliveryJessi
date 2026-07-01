@@ -43,12 +43,14 @@ export default function Home() {
 
   async function loadData() {
     const plates = await db.plates.where('active').equals(1).toArray()
+    plates.sort((a, b) => a.name.localeCompare(b.name))
     setAllActivePlates(plates)
     const date = todayStr()
     const menu = await db.menuOfDay.get(date)
     if (menu && menu.plateIds && menu.plateIds.length > 0) {
       const activeIds = menu.plateIds.filter(id => plates.some(p => p.id === id))
       const found = plates.filter(p => activeIds.includes(p.id))
+      found.sort((a, b) => a.name.localeCompare(b.name))
       setMenuPlates(found)
       setHasMenu(found.length > 0)
     } else {

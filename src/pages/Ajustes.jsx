@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
 
-const APP_VERSION = 'v1.2.4'
+const APP_VERSION = 'v1.2.5'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {
@@ -40,6 +40,7 @@ export default function Ajustes() {
 
   async function loadData() {
     const pl = await db.plates.toArray()
+    pl.sort((a, b) => a.name.localeCompare(b.name))
     setPlates(pl)
 
     const menu = await db.menuOfDay.get(todayStr())

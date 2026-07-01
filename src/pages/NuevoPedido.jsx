@@ -54,6 +54,7 @@ export default function NuevoPedido() {
     if (menu && menu.plateIds && menu.plateIds.length > 0) {
       displayPlates = allPlates.filter(p => menu.plateIds.includes(p.id))
     }
+    displayPlates.sort((a, b) => a.name.localeCompare(b.name))
     setPlates(displayPlates)
 
     const qty = {}
@@ -100,30 +101,27 @@ export default function NuevoPedido() {
   }
 
   function adjustQty(plateId, delta) {
-    let nextQty
-    setQuantities(prev => {
-      const current = prev[plateId] || 0
-      const next = current + delta
-      if (next <= 0) {
+    const current = quantities[plateId] || 0
+    const next = current + delta
+    if (next <= 0) {
+      setQuantities(prev => {
         const copy = { ...prev }
         delete copy[plateId]
         return copy
-      }
-      nextQty = Math.min(next, 99)
-      return { ...prev, [plateId]: nextQty }
-    })
-    if (nextQty) {
-      const plate = plates.find(p => p.id === Number(plateId))
-      const match = plate?.offers?.find(o => o.qty === nextQty)
-      if (match) {
-        setActiveOffers(prev => ({ ...prev, [plateId]: match }))
-      } else {
-        setActiveOffers(prev => {
-          const copy = { ...prev }
-          delete copy[plateId]
-          return copy
-        })
-      }
+      })
+      setActiveOffers(prev => {
+        const copy = { ...prev }
+        delete copy[plateId]
+        return copy
+      })
+      return
+    }
+    const nextQty = Math.min(next, 99)
+    setQuantities({ ...quantities, [plateId]: nextQty })
+    const plate = plates.find(p => p.id === Number(plateId))
+    const match = plate?.offers?.find(o => o.qty === nextQty)
+    if (match) {
+      setActiveOffers({ ...activeOffers, [plateId]: match })
     } else {
       setActiveOffers(prev => {
         const copy = { ...prev }
