@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Reset BD - Comida Mecha</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#FDF3E7;color:#3D2C2E;display:flex;flex-direction:column;align-items:center;padding:40px 20px;min-height:100vh}
+h1{font-size:22px;margin-bottom:24px;text-align:center}
+.card{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px;transition:opacity .15s}
+.btn:active{opacity:.7}
+.btn-danger{background:#E8895F;color:#fff}
+.btn-warning{background:#C4A484;color:#fff}
+.btn-outline{background:transparent;border:2px solid #7A9E7F;color:#7A9E7F}
+.btn-disabled{background:#ccc;color:#666;cursor:not-allowed}
+.msg{margin-top:16px;padding:12px;border-radius:10px;font-size:14px;text-align:center}
+.msg-ok{background:#d4edda;color:#155724}
+.msg-err{background:#f8d7da;color:#721c24}
+.msg-info{background:#d1ecf1;color:#0c5460}
+</style>
+</head>
+<body>
+<h1>🛠️ Mantenimiento de Base de Datos</h1>
+<div class="card">
+<button class="btn btn-danger" id="btn-reset-plates-only">Restablecer solo platos y ofertas</button>
+<button class="btn btn-warning" id="btn-reset-full">⚠️ Restablecer TODO (limpiar completa)</button>
+<button class="btn btn-disabled" id="btn-status">Verificar estado</button>
+<div id="msg" class="msg" style="display:none"></div>
+</div>
+<script>
+const DB_NAME = 'comida-mecha-db'
+const DB_VERSION = 5
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg')
+  el.textContent = text
+  el.className = 'msg msg-' + type
+  el.style.display = 'block'
+}
+
+async function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains('plates')) db.createObjectStore('plates', { keyPath: 'id', autoIncrement: true })
+      if (!db.objectStoreNames.contains('orders')) db.createObjectStore('orders', { keyPath: 'id', autoIncrement: true })
+      if (!db.objectStoreNames.contains('clients')) db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true })
+      if (!db.objectStoreNames.contains('payments')) db.createObjectStore('payments', { keyPath: 'id', autoIncrement: true })
+      if (!db.objectStoreNames.contains('menuOfDay')) db.createObjectStore('menuOfDay', { keyPath: 'date' })
+      if (!db.objectStoreNames.contains('dailyCloses')) db.createObjectStore('dailyCloses', { keyPath: 'date' })
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function clearStore(db, name) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(name, 'readwrite')
+    tx.objectStore(name).clear()
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function addPlate(db, p) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('plates', 'readwrite')
+    tx.objectStore('plates').add(p)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function resetPlatesOnly() {
+  try {
+    const db = await openDB()
+    await clearStore(db, 'plates')
+    await clearStore(db, 'menuOfDay')
+
+    const plates = [
+      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
+      { name: 'Asado', price: 6000, active: 1, offers: [] },
+      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }] },
+      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
+      { name: 'Bandeja sola', price: 4000, active: 1, offers: [] },
+      { name: 'Menú sopa+bandeja', price: 5000, active: 1, offers: [] },
+    ]
+
+    for (const p of plates) {
+      await addPlate(db, p)
+    }
+
+    db.close()
+    showMsg('✅ Platos y ofertas restablecidos correctamente', 'ok')
+  } catch (err) {
+    showMsg('❌ Error: ' + err.message, 'err')
+  }
+}
+
+async function resetFull() {
+  try {
+    const db = await openDB()
+    const stores = ['plates', 'orders', 'clients', 'payments', 'menuOfDay', 'dailyCloses']
+    for (const s of stores) {
+      await clearStore(db, s)
+    }
+
+    const plates = [
+      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
+      { name: 'Asado', price: 6000, active: 1, offers: [] },
+      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }] },
+      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
+      { name: 'Bandeja sola', price: 4000, active: 1, offers: [] },
+      { name: 'Menú sopa+bandeja', price: 5000, active: 1, offers: [] },
+    ]
+
+    for (const p of plates) {
+      await addPlate(db, p)
+    }
+
+    db.close()
+    showMsg('✅ Base de datos restablecida completamente', 'ok')
+  } catch (err) {
+    showMsg('❌ Error: ' + err.message, 'err')
+  }
+}
+
+async function checkStatus() {
+  try {
+    const db = await openDB()
+    const count = {}
+    const stores = ['plates', 'orders', 'clients', 'payments', 'menuOfDay', 'dailyCloses']
+    for (const s of stores) {
+      count[s] = await new Promise((resolve, reject) => {
+        const tx = db.transaction(s, 'readonly')
+        const req = tx.objectStore(s).count()
+        req.onsuccess = () => resolve(req.result)
+        req.onerror = () => reject(req.error)
+      })
+    }
+    db.close()
+    showMsg('📊 Plates: ' + count.plates + ' | Orders: ' + count.orders + ' | Clients: ' + count.clients + ' | Payments: ' + count.payments + ' | Menu: ' + count.menuOfDay + ' | Closes: ' + count.dailyCloses, 'info')
+  } catch (err) {
+    showMsg('❌ Error: ' + err.message, 'err')
+  }
+}
+
+document.getElementById('btn-reset-plates-only').addEventListener('click', () => {
+  if (confirm('¿Restablecer solo platos y ofertas?')) resetPlatesOnly()
+})
+document.getElementById('btn-reset-full').addEventListener('click', () => {
+  if (confirm('¿Estás segura? Esto borrará TODOS los datos (pedidos, clientes, etc.)')) {
+    if (confirm('Última chance: ¿restablecer TODO?')) resetFull()
+  }
+})
+document.getElementById('btn-status').addEventListener('click', checkStatus)
+</script>
+</body>
+</html>
