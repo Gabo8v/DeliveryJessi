@@ -82,11 +82,10 @@ async function resetPlatesOnly() {
     await clearStore(db, 'menuOfDay')
 
     const plates = [
-      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
-      { name: 'Asado', price: 6000, active: 1, offers: [] },
-      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }] },
-      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
-      { name: 'Bandeja', price: 4000, active: 1, sopaPrice: 1000, offers: [] },
+      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }], sopaPrice: 1000 },
+      { name: 'Asado', price: 6000, active: 1, offers: [], sopaPrice: 1000 },
+      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }], sopaPrice: 1000 },
+      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }], sopaPrice: 1000 },
     ]
 
     for (const p of plates) {
@@ -109,11 +108,10 @@ async function resetFull() {
     }
 
     const plates = [
-      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
-      { name: 'Asado', price: 6000, active: 1, offers: [] },
-      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }] },
-      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }] },
-      { name: 'Bandeja', price: 4000, active: 1, sopaPrice: 1000, offers: [] },
+      { name: 'Sopa', price: 1500, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }], sopaPrice: 1000 },
+      { name: 'Asado', price: 6000, active: 1, offers: [], sopaPrice: 1000 },
+      { name: 'Locro', price: 4000, active: 1, offers: [{ label: '3x$10000', qty: 3, totalPrice: 10000 }], sopaPrice: 1000 },
+      { name: 'Sopa de maní', price: 4000, active: 1, offers: [{ label: '2x$5000', qty: 2, totalPrice: 5000 }], sopaPrice: 1000 },
     ]
 
     for (const p of plates) {

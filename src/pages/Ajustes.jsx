@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
 
-const APP_VERSION = 'v1.2.1'
+const APP_VERSION = 'v1.2.2'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {

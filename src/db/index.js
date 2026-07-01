@@ -21,12 +21,10 @@ db.version(6).stores({
 }).upgrade(async trans => {
   const plates = await trans.table('plates').toArray()
   for (const plate of plates) {
-    if (plate.name === 'Bandeja sola') {
-      await trans.table('plates').update(plate.id, { name: 'Bandeja', sopaPrice: 1000 })
-    } else if (plate.name === 'Menú sopa+bandeja') {
+    if (['Bandeja', 'Bandeja sola', 'Menú sopa+bandeja'].includes(plate.name)) {
       await trans.table('plates').delete(plate.id)
-    } else if (plate.sopaPrice === undefined) {
-      await trans.table('plates').update(plate.id, { sopaPrice: 0 })
+    } else if (plate.sopaPrice === undefined || plate.sopaPrice === 0) {
+      await trans.table('plates').update(plate.id, { sopaPrice: 1000 })
     }
   }
 })

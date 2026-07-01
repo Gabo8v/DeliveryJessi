@@ -47,24 +47,21 @@ const defaultPlates = [
   { name: 'Milanesas de carne o pollo', price: 4000 },
   { name: 'Lechón', price: 4000 },
   { name: 'Guiso de lentejas', price: 4000 },
-  { name: 'Bandeja', price: 4000, sopaPrice: 1000 },
 ]
 
 async function seedData() {
   const count = await db.plates.count()
   if (count > 0) return
-  await db.plates.bulkAdd(defaultPlates.map(p => ({ name: p.name, price: p.price, active: 1, offers: p.offers || [], sopaPrice: p.sopaPrice || 0 })))
+  await db.plates.bulkAdd(defaultPlates.map(p => ({ name: p.name, price: p.price, active: 1, offers: p.offers || [], sopaPrice: p.sopaPrice ?? 1000 })))
 }
 
 async function migratePlates() {
   const plates = await db.plates.toArray()
   for (const plate of plates) {
-    if (plate.name === 'Bandeja sola') {
-      await db.plates.update(plate.id, { name: 'Bandeja', sopaPrice: 1000 })
-    } else if (plate.name === 'Menú sopa+bandeja') {
+    if (['Bandeja', 'Bandeja sola', 'Menú sopa+bandeja'].includes(plate.name)) {
       await db.plates.delete(plate.id)
-    } else if (plate.sopaPrice === undefined) {
-      await db.plates.update(plate.id, { sopaPrice: 0 })
+    } else if (plate.sopaPrice === undefined || plate.sopaPrice === 0) {
+      await db.plates.update(plate.id, { sopaPrice: 1000 })
     }
   }
 }
