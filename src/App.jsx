@@ -60,8 +60,18 @@ async function migratePlates() {
   for (const plate of plates) {
     if (['Bandeja', 'Bandeja sola', 'Menú sopa+bandeja'].includes(plate.name)) {
       await db.plates.delete(plate.id)
-    } else if (plate.sopaPrice === undefined || plate.sopaPrice === 0) {
-      await db.plates.update(plate.id, { sopaPrice: 1000 })
+      continue
+    }
+    const updates = {}
+    if (plate.sopaPrice === undefined || plate.sopaPrice === 0) {
+      updates.sopaPrice = 1000
+    }
+    if (!plate.offers || plate.offers.length === 0) {
+      if (plate.name === 'Locro') updates.offers = [{ label: '3x$10000', qty: 3, totalPrice: 10000 }]
+      else if (plate.name === 'Sopa de maní') updates.offers = [{ label: '2x$5000', qty: 2, totalPrice: 5000 }]
+    }
+    if (Object.keys(updates).length > 0) {
+      await db.plates.update(plate.id, updates)
     }
   }
 }

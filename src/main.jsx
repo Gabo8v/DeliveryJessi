@@ -4,19 +4,26 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    for (const reg of regs) reg.unregister()
-  })
-}
-if ('caches' in window) {
-  caches.keys().then(keys => keys.forEach(k => caches.delete(k)))
-}
-
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </StrictMode>,
-)
+;(async () => {
+  if (!sessionStorage.getItem('sw_done')) {
+    let needsReload = false
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations()
+      for (const reg of regs) { reg.unregister(); needsReload = true }
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      if (keys.length > 0) needsReload = true
+      await Promise.all(keys.map(k => caches.delete(k)))
+    }
+    sessionStorage.setItem('sw_done', '1')
+    if (needsReload) { window.location.reload(); return }
+  }
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </StrictMode>,
+  )
+})()
