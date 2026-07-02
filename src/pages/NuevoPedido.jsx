@@ -37,6 +37,7 @@ export default function NuevoPedido() {
   const [takenBy, setTakenBy] = useState('')
   const [clientFocused, setClientFocused] = useState(false)
   const [sopaAddons, setSopaAddons] = useState({})
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const deliveryFee = prices.delivery
 
   useEffect(() => {
@@ -282,7 +283,10 @@ export default function NuevoPedido() {
   return (
     <div className="page">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <button onClick={() => navigate('/')} style={{ fontSize: 24, background: 'none', border: 'none' }}>
+        <button onClick={() => {
+          if (Object.keys(quantities).length > 0) setShowExitConfirm(true)
+          else navigate('/')
+        }} style={{ fontSize: 24, background: 'none', border: 'none' }}>
           ‹
         </button>
         <h2 style={{ fontSize: 20, fontWeight: 700 }}>Nuevo Pedido</h2>
@@ -577,6 +581,35 @@ export default function NuevoPedido() {
           Guardar pedido (${total.toLocaleString()})
         </button>
       </form>
+
+      {showExitConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 600,
+          background: 'rgba(61, 44, 46, 0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'var(--surface)', borderRadius: 24,
+            width: '85%', maxWidth: 320,
+            padding: '32px 24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🧐</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              ¿Seguro deseas salir?
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 24 }}>
+              Perderás el pedido que estás armando.
+            </p>
+            <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginBottom: 8 }}>
+              Salir
+            </button>
+            <button className="btn btn-outline" onClick={() => setShowExitConfirm(false)}>
+              Seguir armando
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

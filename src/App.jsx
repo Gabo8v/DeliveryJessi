@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { App as CapacitorApp } from '@capacitor/app'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import NuevoPedido from './pages/NuevoPedido'
@@ -77,7 +78,33 @@ async function migratePlates() {
 }
 
 function App() {
-  useEffect(() => { seedData().then(migratePlates) }, [])
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false)
+
+  useEffect(() => {
+    seedData().then(migratePlates)
+
+    window.addEventListener('beforeunload', (e) => {
+      e.preventDefault()
+      e.returnValue = ''
+    })
+
+    let handler
+    ;(async () => {
+      try {
+        handler = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          if (canGoBack) {
+            window.history.back()
+          } else {
+            setShowCloseConfirm(true)
+          }
+        })
+      } catch (_) {}
+    })()
+
+    return () => {
+      if (handler) handler.remove()
+    }
+  }, [])
 
   return (
     <>
@@ -93,6 +120,35 @@ function App() {
       </Layout>
 
       <Toast eventTarget={toastEvent} />
+
+      {showCloseConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(61, 44, 46, 0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={(e) => { if (e.target === e.currentTarget) setShowCloseConfirm(false) }}>
+          <div style={{
+            background: 'var(--surface)', borderRadius: 24,
+            width: '85%', maxWidth: 320,
+            padding: '32px 24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              ¿Seguro deseas cerrar la app?
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 24 }}>
+              Los pedidos guardados no se pierden.
+            </p>
+            <button className="btn btn-primary" onClick={async () => { setShowCloseConfirm(false); try { await CapacitorApp.exitApp() } catch (_) {} }} style={{ marginBottom: 8 }}>
+              Cerrar
+            </button>
+            <button className="btn btn-outline" onClick={() => setShowCloseConfirm(false)}>
+              Seguir
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
