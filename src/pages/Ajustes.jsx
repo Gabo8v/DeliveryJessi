@@ -3,7 +3,7 @@ import db from '../db'
 import { showToast } from '../App'
 import BottomSheet from '../components/BottomSheet'
 
-const APP_VERSION = 'v1.2.9'
+const APP_VERSION = 'v1.3.0'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {

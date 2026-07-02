@@ -114,7 +114,7 @@ export default function PedidosDia() {
       <div className="day-selector">
         <button onClick={() => setDayOffset(d => d - 1)} style={{ fontSize: 20, padding: 8, background: 'none', border: 'none' }}>‹</button>
         <span style={{ fontSize: 16, fontWeight: 600 }}>{dayLabel(dayOffset)}</span>
-        <button onClick={() => setDayOffset(d => d + 1)} style={{ fontSize: 20, padding: 8, background: 'none', border: 'none' }}>›</button>
+        <button onClick={() => setDayOffset(d => d + 1)} disabled={dayOffset >= 0} style={{ fontSize: 20, padding: 8, background: 'none', border: 'none', opacity: dayOffset >= 0 ? 0.3 : 1 }}>›</button>
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
