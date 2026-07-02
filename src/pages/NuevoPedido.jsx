@@ -265,7 +265,7 @@ export default function NuevoPedido() {
 
     await db.orders.add(order)
 
-    if (payment === 'fiado' && status === 'pendiente') {
+    if (status === 'pendiente') {
       const c = await db.clients.get(client.id)
       if (c) {
         await db.clients.update(client.id, { debt: (c.debt || 0) + total })

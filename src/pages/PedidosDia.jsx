@@ -59,7 +59,11 @@ export default function PedidosDia() {
       .reverse()
       .toArray()
 
-    setOrders(all.sort((a, b) => a.createdAt - b.createdAt))
+    setOrders(all.sort((a, b) => {
+      const aPending = a.status !== 'pagado' ? 1 : 0
+      const bPending = b.status !== 'pagado' ? 1 : 0
+      return bPending - aPending || b.createdAt - a.createdAt
+    }))
 
     const total = all.reduce((s, o) => s + o.total, 0)
     const paid = all.filter(o => o.status === 'pagado').reduce((s, o) => s + o.total, 0)
@@ -75,14 +79,12 @@ export default function PedidosDia() {
     const newStatus = wasPaid ? 'pendiente' : 'pagado'
     await db.orders.update(order.id, { status: newStatus })
 
-    if (order.payment === 'fiado') {
-      const c = await db.clients.get(order.clientId)
-      if (c) {
-        const debtAdjust = wasPaid ? order.total : -order.total
-        await db.clients.update(order.clientId, {
-          debt: Math.max(0, (c.debt || 0) + debtAdjust)
-        })
-      }
+    const c = await db.clients.get(order.clientId)
+    if (c) {
+      const debtAdjust = wasPaid ? order.total : -order.total
+      await db.clients.update(order.clientId, {
+        debt: Math.max(0, (c.debt || 0) + debtAdjust)
+      })
     }
 
     loadOrders()
@@ -91,7 +93,7 @@ export default function PedidosDia() {
   async function cancelOrder(order) {
     if (!confirm(`¿Anular pedido de ${order.clientName} por $${order.total.toLocaleString()}?`)) return
 
-    if (order.payment === 'fiado' && order.status === 'pendiente') {
+    if (order.status === 'pendiente') {
       const c = await db.clients.get(order.clientId)
       if (c) {
         await db.clients.update(order.clientId, {
