@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
 
-const APP_VERSION = 'v1.2.5'
+const APP_VERSION = 'v1.2.6'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {
@@ -180,9 +180,23 @@ export default function Ajustes() {
     }
   }
 
-  function downloadUpdate() {
+  async function downloadUpdate() {
     if (!updateData) return
-    window.open(updateData.url, '_blank')
+    try {
+      const res = await fetch(updateData.url)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'comida-mecha.apk'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      showToast('✅ APK descargado, abrí el archivo para instalar')
+    } catch (e) {
+      showToast('Error al descargar: ' + e.message)
+    }
     setShowUpdateModal(false)
   }
 
