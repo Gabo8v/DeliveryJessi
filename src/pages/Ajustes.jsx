@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
+import BottomSheet from '../components/BottomSheet'
 
-const APP_VERSION = 'v1.2.8'
+const APP_VERSION = 'v1.2.9'
 const REPO = 'Gabo8v/DeliveryJessi'
 
 function todayStr() {
@@ -14,6 +15,8 @@ function todayStr() {
 
 export default function Ajustes() {
   const [plates, setPlates] = useState([])
+  const [showPlateManager, setShowPlateManager] = useState(false)
+  const [showMenuManager, setShowMenuManager] = useState(false)
   const [menuDate, setMenuDate] = useState(todayStr())
   const [menuSelected, setMenuSelected] = useState([])
   const [priceBase, setPriceBase] = useState(4000)
@@ -196,65 +199,16 @@ export default function Ajustes() {
     <div className="page">
       <h2 className="title-lg" style={{ marginBottom: 16 }}>Ajustes</h2>
 
-      <div className="setting-section">
-        <div className="section-title">Platos</div>
-        {plates.map(p => (
-          <div key={p.id} className="setting-item" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '12px 0', borderBottom: '1px solid var(--border)'
-          }}>
-            <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => openEditPlate(p)}>
-              <span style={{ fontWeight: 500 }}>{p.name}</span>
-              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12, display: 'block' }}>
-                ${p.price.toLocaleString()}{p.sopaPrice ? ` + sopa $${p.sopaPrice.toLocaleString()}` : ''}{p.offers?.length > 0 ? ` · ${p.offers.length} oferta${p.offers.length > 1 ? 's' : ''}` : ''}
-              </small>
-            </div>
-            <button onClick={() => togglePlateActive(p.id)} style={{
-              fontSize: 13, fontWeight: 500,
-              color: p.active ? 'var(--danger)' : 'var(--success)',
-              background: 'none', border: 'none', marginLeft: 8
-            }}>
-              {p.active ? 'Desactivar' : 'Activar'}
-            </button>
-          </div>
-        ))}
-        <button className="btn btn-outline btn-sm" onClick={() => setShowAddPlate(true)} style={{ marginTop: 8, width: 'auto' }}>
-          + Agregar plato
+      <div className="setting-section" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button className="btn btn-outline" onClick={() => setShowPlateManager(true)}
+          style={{ justifyContent: 'flex-start', gap: 12, padding: '14px 16px', fontSize: 15, fontWeight: 500 }}>
+          <span style={{ fontSize: 22 }}>🍽️</span>
+          Editar Platos
         </button>
-      </div>
-
-      <div className="setting-section">
-        <div className="section-title">Menú del día</div>
-        <div className="input-group">
-          <label className="input-label">Fecha</label>
-          <input className="input-field" type="date" value={menuDate}
-            onChange={e => setMenuDate(e.target.value)} />
-        </div>
-        <div className="input-group">
-            <label className="input-label">Platos del menú (5)</label>
-          <div className="search-wrap" style={{ marginBottom: 8 }}>
-            <span className="search-icon">🔍</span>
-            <input className="input-field" placeholder="Buscar plato..."
-              value={menuSearch} onChange={e => setMenuSearch(e.target.value)} />
-          </div>
-          <div className="chip-group">
-            {plates
-              .filter(p => p.active)
-              .filter(p => !menuSearch || p.name.toLowerCase().includes(menuSearch.toLowerCase()))
-              .map(p => (
-              <button
-                key={p.id}
-                type="button"
-                className={`chip ${menuSelected.includes(p.id) ? 'selected' : ''}`}
-                onClick={() => toggleMenuPlate(p.id)}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button className="btn btn-primary btn-sm" onClick={saveMenuOfDay} style={{ width: 'auto' }}>
-          Guardar menú
+        <button className="btn btn-outline" onClick={() => setShowMenuManager(true)}
+          style={{ justifyContent: 'flex-start', gap: 12, padding: '14px 16px', fontSize: 15, fontWeight: 500 }}>
+          <span style={{ fontSize: 22 }}>📋</span>
+          Menú del día
         </button>
       </div>
 
@@ -305,24 +259,76 @@ export default function Ajustes() {
         </button>
       </div>
 
-      {/* Update modal */}
-      {showUpdateModal && updateData && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowUpdateModal(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
+      {/* Plate Manager */}
+      <BottomSheet show={showPlateManager} onClose={() => setShowPlateManager(false)} height="90vh">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700 }}>🍽️ Platos</h3>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAddPlate(true)}>
+            + Agregar
+          </button>
+        </div>
+        {plates.map(p => (
+          <div key={p.id} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 0', borderBottom: '1px solid var(--border)'
           }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
+            <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => openEditPlate(p)}>
+              <span style={{ fontWeight: 500 }}>{p.name}</span>
+              <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12, display: 'block' }}>
+                ${p.price.toLocaleString()}{p.sopaPrice ? ` + sopa $${p.sopaPrice.toLocaleString()}` : ''}{p.offers?.length > 0 ? ` · ${p.offers.length} oferta${p.offers.length > 1 ? 's' : ''}` : ''}
+              </small>
+            </div>
+            <button onClick={() => togglePlateActive(p.id)} style={{
+              fontSize: 13, fontWeight: 500,
+              color: p.active ? 'var(--danger)' : 'var(--success)',
+              background: 'none', border: 'none', marginLeft: 8
+            }}>
+              {p.active ? 'Desactivar' : 'Activar'}
+            </button>
+          </div>
+        ))}
+      </BottomSheet>
+
+      {/* Menu Manager */}
+      <BottomSheet show={showMenuManager} onClose={() => setShowMenuManager(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>📋 Menú del día</h3>
+        <div className="input-group">
+          <label className="input-label">Fecha</label>
+          <input className="input-field" type="date" value={menuDate}
+            onChange={e => setMenuDate(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Platos del menú (5)</label>
+          <div className="search-wrap" style={{ marginBottom: 8 }}>
+            <span className="search-icon">🔍</span>
+            <input className="input-field" placeholder="Buscar plato..."
+              value={menuSearch} onChange={e => setMenuSearch(e.target.value)} />
+          </div>
+          <div className="chip-group">
+            {plates
+              .filter(p => p.active)
+              .filter(p => !menuSearch || p.name.toLowerCase().includes(menuSearch.toLowerCase()))
+              .map(p => (
+              <button
+                key={p.id}
+                type="button"
+                className={`chip ${menuSelected.includes(p.id) ? 'selected' : ''}`}
+                onClick={() => toggleMenuPlate(p.id)}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => { saveMenuOfDay(); setShowMenuManager(false) }} style={{ width: 'auto' }}>
+          Guardar menú
+        </button>
+      </BottomSheet>
+
+      {/* Update modal */}
+      <BottomSheet show={showUpdateModal} onClose={() => setShowUpdateModal(false)}>
+        {updateData && (
+          <>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>📥 Nueva versión disponible</h3>
             <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 4 }}>
               {updateData.version} → Instalá el nuevo APK para actualizar.
@@ -342,68 +348,35 @@ export default function Ajustes() {
             <button className="btn btn-outline" onClick={() => setShowUpdateModal(false)} style={{ marginTop: 8 }}>
               Ahora no
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </BottomSheet>
 
       {/* Add plate modal */}
-      {showAddPlate && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowAddPlate(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Nuevo plato</h3>
-            <div className="input-group">
-              <input className="input-field" placeholder="Nombre del plato"
-                value={newPlateName} onChange={e => setNewPlateName(e.target.value)} />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Precio ($)</label>
-              <input className="input-field" type="number" value={newPlatePrice}
-                onChange={e => setNewPlatePrice(parseFloat(e.target.value) || 0)} />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Agregar sopa (+$)</label>
-              <input className="input-field" type="number" value={newPlateSopa}
-                onChange={e => setNewPlateSopa(parseFloat(e.target.value) || 0)} />
-            </div>
-            <button className="btn btn-primary" onClick={addPlate}>Agregar plato</button>
-            <button className="btn btn-outline" onClick={() => setShowAddPlate(false)} style={{ marginTop: 8 }}>Cancelar</button>
-          </div>
+      <BottomSheet show={showAddPlate} onClose={() => setShowAddPlate(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Nuevo plato</h3>
+        <div className="input-group">
+          <input className="input-field" placeholder="Nombre del plato"
+            value={newPlateName} onChange={e => setNewPlateName(e.target.value)} />
         </div>
-      )}
+        <div className="input-group">
+          <label className="input-label">Precio ($)</label>
+          <input className="input-field" type="number" value={newPlatePrice}
+            onChange={e => setNewPlatePrice(parseFloat(e.target.value) || 0)} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Agregar sopa (+$)</label>
+          <input className="input-field" type="number" value={newPlateSopa}
+            onChange={e => setNewPlateSopa(parseFloat(e.target.value) || 0)} />
+        </div>
+        <button className="btn btn-primary" onClick={addPlate}>Agregar plato</button>
+        <button className="btn btn-outline" onClick={() => setShowAddPlate(false)} style={{ marginTop: 8 }}>Cancelar</button>
+      </BottomSheet>
 
       {/* Edit plate modal */}
-      {editPlate && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setEditPlate(null) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', maxHeight: '85vh', overflowY: 'auto',
-            padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
+      <BottomSheet show={!!editPlate} onClose={() => setEditPlate(null)}>
+        {editPlate && (
+          <>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Editar plato</h3>
             <div className="input-group">
               <label className="input-label">Nombre</label>
@@ -458,9 +431,9 @@ export default function Ajustes() {
             <button className="btn btn-outline" onClick={() => setEditPlate(null)} style={{ marginTop: 8 }}>
               Cancelar
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </BottomSheet>
     </div>
   )
 }

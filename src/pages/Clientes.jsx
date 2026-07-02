@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import db from '../db'
 import { showToast } from '../App'
+import BottomSheet from '../components/BottomSheet'
 
 export default function Clientes() {
   const [clients, setClients] = useState([])
@@ -132,24 +133,9 @@ export default function Clientes() {
       </button>
 
       {/* Client detail modal */}
-      {showDetail && selectedClient && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowDetail(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', maxHeight: '85vh', overflowY: 'auto',
-padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
+      <BottomSheet show={showDetail && !!selectedClient} onClose={() => setShowDetail(false)} height="90vh">
+        {selectedClient && (
+          <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, flex: 1 }}>{selectedClient.name}</h3>
               {(selectedClient.debt || 0) > 0
@@ -187,94 +173,56 @@ padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
             <button className="btn btn-outline" onClick={() => setShowDetail(false)} style={{ marginTop: 8 }}>
               Cerrar
             </button>
-          </div>
+          </>
+        )}
+      </BottomSheet>
+
+      <BottomSheet show={showAddModal} onClose={() => setShowAddModal(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Nuevo cliente</h3>
+
+        <div className="input-group">
+          <input className="input-field" placeholder="Nombre completo"
+            value={newClient.name} onChange={e => setNewClient(p => ({ ...p, name: e.target.value }))} />
         </div>
-      )}
-
-      {/* Add client modal */}
-      {showAddModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Nuevo cliente</h3>
-
-            <div className="input-group">
-              <input className="input-field" placeholder="Nombre completo"
-                value={newClient.name} onChange={e => setNewClient(p => ({ ...p, name: e.target.value }))} />
-            </div>
-            <div className="input-group">
-              <input className="input-field" placeholder="Teléfono" type="tel"
-                value={newClient.phone} onChange={e => setNewClient(p => ({ ...p, phone: e.target.value }))} />
-            </div>
-            <div className="input-group">
-              <input className="input-field" placeholder="Dirección"
-                value={newClient.address} onChange={e => setNewClient(p => ({ ...p, address: e.target.value }))} />
-            </div>
-            <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <input type="checkbox" style={{ width: 20, height: 20 }}
-                checked={newClient.fiado} onChange={e => setNewClient(p => ({ ...p, fiado: e.target.checked }))} />
-              <label style={{ fontSize: 14 }}>¿Es fiado?</label>
-            </div>
-
-            <button className="btn btn-primary" onClick={addClient}>Agregar cliente</button>
-            <button className="btn btn-outline" onClick={() => setShowAddModal(false)} style={{ marginTop: 8 }}>Cancelar</button>
-          </div>
+        <div className="input-group">
+          <input className="input-field" placeholder="Teléfono" type="tel"
+            value={newClient.phone} onChange={e => setNewClient(p => ({ ...p, phone: e.target.value }))} />
         </div>
-      )}
-
-      {/* Payment modal */}
-      {showPaymentModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowPaymentModal(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Registrar pago</h3>
-
-            <div className="input-group">
-              <label className="input-label">Cliente</label>
-              <div style={{ fontWeight: 600 }}>{selectedClient?.name}</div>
-            </div>
-            <div className="input-group">
-              <label className="input-label">Monto ($)</label>
-              <input className="input-field" type="number" placeholder="0"
-                value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
-            </div>
-            <div className="input-group">
-              <label className="input-label">Fecha</label>
-              <input className="input-field" type="date"
-                value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
-            </div>
-
-            <button className="btn btn-primary" onClick={registerPayment}>Registrar pago</button>
-            <button className="btn btn-outline" onClick={() => setShowPaymentModal(false)} style={{ marginTop: 8 }}>Cancelar</button>
-          </div>
+        <div className="input-group">
+          <input className="input-field" placeholder="Dirección"
+            value={newClient.address} onChange={e => setNewClient(p => ({ ...p, address: e.target.value }))} />
         </div>
-      )}
+        <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input type="checkbox" style={{ width: 20, height: 20 }}
+            checked={newClient.fiado} onChange={e => setNewClient(p => ({ ...p, fiado: e.target.checked }))} />
+          <label style={{ fontSize: 14 }}>¿Es fiado?</label>
+        </div>
+
+        <button className="btn btn-primary" onClick={addClient}>Agregar cliente</button>
+        <button className="btn btn-outline" onClick={() => setShowAddModal(false)} style={{ marginTop: 8 }}>Cancelar</button>
+      </BottomSheet>
+
+      <BottomSheet show={showPaymentModal} onClose={() => setShowPaymentModal(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Registrar pago</h3>
+
+        <div className="input-group">
+          <label className="input-label">Cliente</label>
+          <div style={{ fontWeight: 600 }}>{selectedClient?.name}</div>
+        </div>
+        <div className="input-group">
+          <label className="input-label">Monto ($)</label>
+          <input className="input-field" type="number" placeholder="0"
+            value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Fecha</label>
+          <input className="input-field" type="date"
+            value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+        </div>
+
+        <button className="btn btn-primary" onClick={registerPayment}>Registrar pago</button>
+        <button className="btn btn-outline" onClick={() => setShowPaymentModal(false)} style={{ marginTop: 8 }}>Cancelar</button>
+      </BottomSheet>
     </div>
   )
 }

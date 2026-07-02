@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import db from '../db'
 import { showToast } from '../App'
+import BottomSheet from '../components/BottomSheet'
 
 function todayStr() {
   const d = new Date()
@@ -213,74 +214,40 @@ export default function Home() {
         </div>
       )}
 
-      {showMenuModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowMenuModal(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', maxHeight: '85vh', overflowY: 'auto',
-            padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>📋 Cargar menú del día</h3>
-            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 16 }}>
-              Seleccioná hasta 5 platos para hoy
-            </p>
-            <div className="search-wrap" style={{ marginBottom: 12 }}>
-              <span className="search-icon">🔍</span>
-              <input className="input-field" placeholder="Buscar plato..."
-                value={menuSearch} onChange={e => setMenuSearch(e.target.value)} />
-            </div>
-            <div className="chip-group">
-              {allActivePlates
-                .filter(p => !menuSearch || p.name.toLowerCase().includes(menuSearch.toLowerCase()))
-                .map(p => (
-                <button key={p.id} type="button"
-                  className={`chip ${menuSelected.includes(p.id) ? 'selected' : ''}`}
-                  onClick={() => toggleMenuPlate(p.id)}>
-                  {p.name}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={saveMenuOfDay} style={{ flex: 1 }}>
-                Guardar menú ({menuSelected.length}/5)
-              </button>
-              <button className="btn btn-outline" onClick={() => setShowMenuModal(false)} style={{ flex: 1 }}>
-                Cancelar
-              </button>
-            </div>
-          </div>
+      <BottomSheet show={showMenuModal} onClose={() => setShowMenuModal(false)}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>📋 Cargar menú del día</h3>
+        <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 16 }}>
+          Seleccioná hasta 5 platos para hoy
+        </p>
+        <div className="search-wrap" style={{ marginBottom: 12 }}>
+          <span className="search-icon">🔍</span>
+          <input className="input-field" placeholder="Buscar plato..."
+            value={menuSearch} onChange={e => setMenuSearch(e.target.value)} />
         </div>
-      )}
+        <div className="chip-group">
+          {allActivePlates
+            .filter(p => !menuSearch || p.name.toLowerCase().includes(menuSearch.toLowerCase()))
+            .map(p => (
+            <button key={p.id} type="button"
+              className={`chip ${menuSelected.includes(p.id) ? 'selected' : ''}`}
+              onClick={() => toggleMenuPlate(p.id)}>
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button className="btn btn-primary" onClick={saveMenuOfDay} style={{ flex: 1 }}>
+            Guardar menú ({menuSelected.length}/5)
+          </button>
+          <button className="btn btn-outline" onClick={() => setShowMenuModal(false)} style={{ flex: 1 }}>
+            Cancelar
+          </button>
+        </div>
+      </BottomSheet>
 
-      {showCierre && cierreData && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 500,
-            background: 'rgba(61, 44, 46, 0.5)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowCierre(false) }}
-        >
-          <div style={{
-            background: 'var(--surface)', borderRadius: '24px 24px 0 0',
-            width: '100%', maxHeight: '85vh', overflowY: 'auto',
-            padding: '24px 16px calc(16px + env(safe-area-inset-bottom, 16px))',
-          }}>
-            <div style={{
-              width: 36, height: 4, background: 'var(--border)',
-              borderRadius: 4, margin: '0 auto 16px',
-            }} />
+      <BottomSheet show={showCierre && !!cierreData} onClose={() => setShowCierre(false)} height="90vh">
+        {cierreData && (
+          <>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>🔒 Cerrar turno</h3>
             <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 16 }}>
               Resumen del día {formatDate()}
@@ -322,9 +289,9 @@ export default function Home() {
             <button className="btn btn-outline" onClick={() => setShowCierre(false)} style={{ marginTop: 8 }}>
               Cancelar
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </BottomSheet>
 
       {showConfirmCierre && (
         <div
